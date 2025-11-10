@@ -1,6 +1,8 @@
 const http = require('http');
 const fs = require('fs');
 const url = require('url');
+const path = require('path');
+const MedicineCalculator = require('./medicineCalculator');
 
 const TIME_SLOTS = [
   '08:00-10:00',
@@ -92,6 +94,85 @@ const server = http.createServer((req, res) => {
     const available = getAvailableSlots(date, bookings);
     res.writeHead(200, { 'Content-Type': 'application/json' });
     return res.end(JSON.stringify(available));
+  }
+
+  // Medicinregner endpoints
+  if (req.method === 'POST' && req.url === '/medicine/calculate') {
+    let body = '';
+    req.on('data', chunk => body += chunk);
+    req.on('end', () => {
+      try {
+        const data = JSON.parse(body);
+        const calculator = new MedicineCalculator();
+        let result;
+
+        switch (data.type) {
+          case 'ampul':
+            result = calculator.ampulBeregning(data.dosis, data.styrke);
+            break;
+          case 'toerstof':
+            result = calculator.toerstofBeregning(data.toerstofMaengde, data.oensketKoncentration);
+            break;
+          case 'vaeske':
+            result = calculator.vaeskeBeregning(data.volumen, data.tid, data.hastighed);
+            break;
+          case 'draabe':
+            result = calculator.draabeHastighed(data.volumen, data.tidTimer, data.draabeFaktor);
+            break;
+          case 'koncentration':
+            result = calculator.koncentrationBeregning(data.slutVolumen, data.slutKoncentration, data.startKoncentration);
+            break;
+          case 'vaegtbaseret':
+            result = calculator.vaegtbaseretDosering(data.vaegt, data.dosisPerKg, data.praeparatStyrke, data.maxDosisPerKg);
+            break;
+          case 'kontinuerlig':
+            result = calculator.kontinuerligInfusion(data.dosisMikrogramPerKgPerMin, data.vaegt, data.maengdeMg, data.volumenMl);
+            break;
+          case 'enhedskonvertering':
+            result = calculator.enhedsKonvertering(data.vaerdi, data.fraEnhed, data.tilEnhed, data.molarmasse);
+            break;
+          case 'elektrolyt':
+            result = calculator.elektrolytBeregning(data.mmolOensket, data.mmolPerMl);
+            break;
+          case 'bsa':
+            result = calculator.beregnBSA(data.vaegt, data.hoejde);
+            break;
+          default:
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            return res.end(JSON.stringify({ error: 'Ukendt beregningstype' }));
+        }
+
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(result));
+      } catch (err) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: err.message }));
+      }
+    });
+    return;
+  }
+
+  // Serve static frontend files
+  if (req.method === 'GET' && req.url.startsWith('/medicine')) {
+    const filePath = req.url === '/medicine' || req.url === '/medicine/'
+      ? path.join(__dirname, '..', 'frontend', 'index.html')
+      : path.join(__dirname, '..', 'frontend', req.url.replace('/medicine', ''));
+
+    fs.readFile(filePath, (err, content) => {
+      if (err) {
+        res.writeHead(404, { 'Content-Type': 'text/plain' });
+        return res.end('Not found');
+      }
+
+      const ext = path.extname(filePath);
+      let contentType = 'text/html';
+      if (ext === '.css') contentType = 'text/css';
+      if (ext === '.js') contentType = 'application/javascript';
+
+      res.writeHead(200, { 'Content-Type': contentType });
+      res.end(content);
+    });
+    return;
   }
 
   res.writeHead(404, { 'Content-Type': 'text/plain' });

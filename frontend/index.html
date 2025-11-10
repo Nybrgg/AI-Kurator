@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Studie Hjælper - Medicinregner for Sygeplejestuderende</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.2em;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        @media (max-width: 968px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        select, input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        #resultat {
+            background: #f8f9fa;
+            border-left: 5px solid #667eea;
+            padding: 20px;
+            border-radius: 8px;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            max-height: 600px;
+            overflow-y: auto;
+            display: none;
+        }
+
+        #resultat.show {
+            display: block;
+        }
+
+        .beregningstype-info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 14px;
+            color: #1976d2;
+        }
+
+        .input-fields {
+            display: none;
+        }
+
+        .input-fields.active {
+            display: block;
+        }
+
+        .info-icon {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 20px;
+            font-size: 14px;
+            margin-left: 5px;
+            cursor: help;
+        }
+
+        .eksempler {
+            margin-top: 20px;
+            padding: 15px;
+            background: #fff3cd;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .eksempler h3 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+
+        .eksempler ul {
+            list-style-position: inside;
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏥 AI Studie Hjælper</h1>
+            <p class="subtitle">Medicinregner for Sygeplejestuderende</p>
+            <p style="margin-top: 10px; color: #999; font-size: 0.9em;">
+                Professionel beregningsværktøj til træning i medicinsk dosering
+            </p>
+        </header>
+
+        <div class="main-content">
+            <div class="card">
+                <h2>🧮 Vælg Beregning</h2>
+
+                <div class="form-group">
+                    <label for="beregningstype">Beregningstype</label>
+                    <select id="beregningstype" onchange="visInputFelter()">
+                        <option value="">-- Vælg beregningstype --</option>
+                        <option value="ampul">A. Ampulberegning</option>
+                        <option value="toerstof">B. Tørstofberegning</option>
+                        <option value="vaeske">C. Væskeberegning (infusion)</option>
+                        <option value="draabe">D. Dråbehastighed</option>
+                        <option value="koncentration">E. Koncentrationsberegning/Fortynding</option>
+                        <option value="vaegtbaseret">F. Vægtbaseret dosering</option>
+                        <option value="kontinuerlig">G. Kontinuerlig infusion (sprøjtepumpe)</option>
+                        <option value="enhedskonvertering">H. Enhedskonvertering</option>
+                        <option value="elektrolyt">I. Elektrolytberegning</option>
+                        <option value="bsa">J. Body Surface Area (BSA)</option>
+                    </select>
+                </div>
+
+                <div id="beregningstype-info" class="beregningstype-info" style="display: none;"></div>
+
+                <!-- A. Ampulberegning -->
+                <div id="fields-ampul" class="input-fields">
+                    <div class="form-group">
+                        <label>Ordineret dosis (mg)</label>
+                        <input type="number" id="ampul-dosis" step="0.01" placeholder="f.eks. 75">
+                    </div>
+                    <div class="form-group">
+                        <label>Ampulstyrke (mg/ml)</label>
+                        <input type="number" id="ampul-styrke" step="0.01" placeholder="f.eks. 25">
+                    </div>
+                    <div class="eksempler">
+                        <h3>Eksempel:</h3>
+                        <ul>
+                            <li>Dosis: 75 mg</li>
+                            <li>Styrke: 25 mg/ml</li>
+                            <li>Resultat: 3 ml</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- B. Tørstofberegning -->
+                <div id="fields-toerstof" class="input-fields">
+                    <div class="form-group">
+                        <label>Tørstofmængde (mg)</label>
+                        <input type="number" id="toerstof-maengde" step="0.01" placeholder="f.eks. 500">
+                    </div>
+                    <div class="form-group">
+                        <label>Ønsket koncentration (mg/ml)</label>
+                        <input type="number" id="toerstof-koncentration" step="0.01" placeholder="f.eks. 10">
+                    </div>
+                </div>
+
+                <!-- C. Væskeberegning -->
+                <div id="fields-vaeske" class="input-fields">
+                    <div class="form-group">
+                        <label>Volumen (ml)</label>
+                        <input type="number" id="vaeske-volumen" step="0.01" placeholder="f.eks. 1000">
+                    </div>
+                    <div class="form-group">
+                        <label>Tid (timer) - lad stå tom hvis du kender hastighed</label>
+                        <input type="number" id="vaeske-tid" step="0.01" placeholder="f.eks. 8">
+                    </div>
+                    <div class="form-group">
+                        <label>Hastighed (ml/time) - lad stå tom hvis du kender tid</label>
+                        <input type="number" id="vaeske-hastighed" step="0.01" placeholder="f.eks. 125">
+                    </div>
+                    <div class="eksempler">
+                        <h3>Eksempel:</h3>
+                        <ul>
+                            <li>1000 ml over 8 timer = 125 ml/time</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- D. Dråbehastighed -->
+                <div id="fields-draabe" class="input-fields">
+                    <div class="form-group">
+                        <label>Volumen (ml)</label>
+                        <input type="number" id="draabe-volumen" step="0.01" placeholder="f.eks. 500">
+                    </div>
+                    <div class="form-group">
+                        <label>Tid (timer)</label>
+                        <input type="number" id="draabe-tid" step="0.01" placeholder="f.eks. 4">
+                    </div>
+                    <div class="form-group">
+                        <label>Dråbefaktor (dråber/ml)</label>
+                        <select id="draabe-faktor">
+                            <option value="15">15 dråber/ml</option>
+                            <option value="20" selected>20 dråber/ml</option>
+                            <option value="60">60 dråber/ml</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- E. Koncentration -->
+                <div id="fields-koncentration" class="input-fields">
+                    <div class="form-group">
+                        <label>Slutvolumen (ml)</label>
+                        <input type="number" id="konc-slutvolumen" step="0.01" placeholder="f.eks. 100">
+                    </div>
+                    <div class="form-group">
+                        <label>Slutkoncentration (mg/ml)</label>
+                        <input type="number" id="konc-slut" step="0.01" placeholder="f.eks. 2">
+                    </div>
+                    <div class="form-group">
+                        <label>Startkoncentration (mg/ml)</label>
+                        <input type="number" id="konc-start" step="0.01" placeholder="f.eks. 10">
+                    </div>
+                </div>
+
+                <!-- F. Vægtbaseret -->
+                <div id="fields-vaegtbaseret" class="input-fields">
+                    <div class="form-group">
+                        <label>Vægt (kg)</label>
+                        <input type="number" id="vb-vaegt" step="0.1" placeholder="f.eks. 15">
+                    </div>
+                    <div class="form-group">
+                        <label>Dosis pr. kg (mg/kg)</label>
+                        <input type="number" id="vb-dosis" step="0.01" placeholder="f.eks. 10">
+                    </div>
+                    <div class="form-group">
+                        <label>Præparatstyrke (mg/ml)</label>
+                        <input type="number" id="vb-styrke" step="0.01" placeholder="f.eks. 24">
+                    </div>
+                    <div class="form-group">
+                        <label>Max dosis pr. kg (valgfri)</label>
+                        <input type="number" id="vb-max" step="0.01" placeholder="f.eks. 15">
+                    </div>
+                </div>
+
+                <!-- G. Kontinuerlig infusion -->
+                <div id="fields-kontinuerlig" class="input-fields">
+                    <div class="form-group">
+                        <label>Dosis (mikrogram/kg/min)</label>
+                        <input type="number" id="ki-dosis" step="0.01" placeholder="f.eks. 5">
+                    </div>
+                    <div class="form-group">
+                        <label>Vægt (kg)</label>
+                        <input type="number" id="ki-vaegt" step="0.1" placeholder="f.eks. 70">
+                    </div>
+                    <div class="form-group">
+                        <label>Lægemiddel i sprøjte (mg)</label>
+                        <input type="number" id="ki-mg" step="0.01" placeholder="f.eks. 250">
+                    </div>
+                    <div class="form-group">
+                        <label>Volumen i sprøjte (ml)</label>
+                        <input type="number" id="ki-ml" step="0.01" placeholder="f.eks. 50">
+                    </div>
+                </div>
+
+                <!-- H. Enhedskonvertering -->
+                <div id="fields-enhedskonvertering" class="input-fields">
+                    <div class="form-group">
+                        <label>Værdi</label>
+                        <input type="number" id="ek-vaerdi" step="0.01" placeholder="f.eks. 2">
+                    </div>
+                    <div class="form-group">
+                        <label>Fra enhed</label>
+                        <select id="ek-fra">
+                            <option value="g">gram (g)</option>
+                            <option value="mg">milligram (mg)</option>
+                            <option value="mikrogram">mikrogram (µg)</option>
+                            <option value="l">liter (l)</option>
+                            <option value="ml">milliliter (ml)</option>
+                            <option value="%">procent (%)</option>
+                            <option value="mg/ml">mg/ml</option>
+                            <option value="mmol">mmol</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Til enhed</label>
+                        <select id="ek-til">
+                            <option value="g">gram (g)</option>
+                            <option value="mg">milligram (mg)</option>
+                            <option value="mikrogram">mikrogram (µg)</option>
+                            <option value="l">liter (l)</option>
+                            <option value="ml">milliliter (ml)</option>
+                            <option value="%">procent (%)</option>
+                            <option value="mg/ml">mg/ml</option>
+                            <option value="mmol">mmol</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Molarmasse (kun for mmol konvertering, valgfri)</label>
+                        <input type="number" id="ek-molarmasse" step="0.01" placeholder="f.eks. 39.1 for kalium">
+                    </div>
+                </div>
+
+                <!-- I. Elektrolyt -->
+                <div id="fields-elektrolyt" class="input-fields">
+                    <div class="form-group">
+                        <label>Ønsket mængde (mmol)</label>
+                        <input type="number" id="el-mmol" step="0.01" placeholder="f.eks. 40">
+                    </div>
+                    <div class="form-group">
+                        <label>Koncentration (mmol/ml)</label>
+                        <input type="number" id="el-konc" step="0.01" placeholder="f.eks. 1">
+                    </div>
+                </div>
+
+                <!-- J. BSA -->
+                <div id="fields-bsa" class="input-fields">
+                    <div class="form-group">
+                        <label>Vægt (kg)</label>
+                        <input type="number" id="bsa-vaegt" step="0.1" placeholder="f.eks. 70">
+                    </div>
+                    <div class="form-group">
+                        <label>Højde (cm)</label>
+                        <input type="number" id="bsa-hoejde" step="0.1" placeholder="f.eks. 175">
+                    </div>
+                </div>
+
+                <button onclick="beregn()" style="margin-top: 20px;">Beregn</button>
+            </div>
+
+            <div class="card">
+                <h2>📊 Resultat</h2>
+                <div id="resultat"></div>
+                <div id="ingen-resultat" style="text-align: center; color: #999; padding: 40px;">
+                    Vælg en beregningstype og indtast værdierne for at se resultatet her.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const beregningsInfo = {
+            ampul: 'Beregner hvor meget ml der skal trækkes op fra en ampul baseret på ordineret dosis og ampulstyrke.',
+            toerstof: 'Beregner hvor meget væske der skal tilsættes tørstof for at opnå ønsket koncentration.',
+            vaeske: 'Beregner infusionshastighed (ml/time) eller infusionstid baseret på volumen.',
+            draabe: 'Beregner dråbehastighed (dråber/min) baseret på volumen, tid og dråbefaktor.',
+            koncentration: 'Beregner fortynding/blanding ved hjælp af formlen C1×V1 = C2×V2.',
+            vaegtbaseret: 'Beregner dosis baseret på patientens vægt (mg/kg). Bruges ofte til pædiatrisk dosering.',
+            kontinuerlig: 'Beregner ml/time for sprøjtepumpe ved kontinuerlig infusion.',
+            enhedskonvertering: 'Konverterer mellem forskellige enheder (mg, g, mikrogram, ml, l, %, mmol).',
+            elektrolyt: 'Beregner elektrolytmængder, typisk for kalium, natrium, calcium.',
+            bsa: 'Beregner Body Surface Area ved hjælp af Mosteller-formlen.'
+        };
+
+        function visInputFelter() {
+            const type = document.getElementById('beregningstype').value;
+
+            // Skjul alle input felter
+            document.querySelectorAll('.input-fields').forEach(el => {
+                el.classList.remove('active');
+            });
+
+            // Vis info
+            const infoDiv = document.getElementById('beregningstype-info');
+            if (type && beregningsInfo[type]) {
+                infoDiv.textContent = beregningsInfo[type];
+                infoDiv.style.display = 'block';
+            } else {
+                infoDiv.style.display = 'none';
+            }
+
+            // Vis relevante input felter
+            if (type) {
+                const fields = document.getElementById(`fields-${type}`);
+                if (fields) {
+                    fields.classList.add('active');
+                }
+            }
+
+            // Skjul resultat
+            document.getElementById('resultat').classList.remove('show');
+            document.getElementById('ingen-resultat').style.display = 'block';
+        }
+
+        async function beregn() {
+            const type = document.getElementById('beregningstype').value;
+            if (!type) {
+                alert('Vælg venligst en beregningstype');
+                return;
+            }
+
+            let data = { type };
+
+            try {
+                switch(type) {
+                    case 'ampul':
+                        data.dosis = parseFloat(document.getElementById('ampul-dosis').value);
+                        data.styrke = parseFloat(document.getElementById('ampul-styrke').value);
+                        break;
+                    case 'toerstof':
+                        data.toerstofMaengde = parseFloat(document.getElementById('toerstof-maengde').value);
+                        data.oensketKoncentration = parseFloat(document.getElementById('toerstof-koncentration').value);
+                        break;
+                    case 'vaeske':
+                        data.volumen = parseFloat(document.getElementById('vaeske-volumen').value);
+                        const tid = document.getElementById('vaeske-tid').value;
+                        const hastighed = document.getElementById('vaeske-hastighed').value;
+                        data.tid = tid ? parseFloat(tid) : null;
+                        data.hastighed = hastighed ? parseFloat(hastighed) : null;
+                        break;
+                    case 'draabe':
+                        data.volumen = parseFloat(document.getElementById('draabe-volumen').value);
+                        data.tidTimer = parseFloat(document.getElementById('draabe-tid').value);
+                        data.draabeFaktor = parseInt(document.getElementById('draabe-faktor').value);
+                        break;
+                    case 'koncentration':
+                        data.slutVolumen = parseFloat(document.getElementById('konc-slutvolumen').value);
+                        data.slutKoncentration = parseFloat(document.getElementById('konc-slut').value);
+                        data.startKoncentration = parseFloat(document.getElementById('konc-start').value);
+                        break;
+                    case 'vaegtbaseret':
+                        data.vaegt = parseFloat(document.getElementById('vb-vaegt').value);
+                        data.dosisPerKg = parseFloat(document.getElementById('vb-dosis').value);
+                        data.praeparatStyrke = parseFloat(document.getElementById('vb-styrke').value);
+                        const max = document.getElementById('vb-max').value;
+                        data.maxDosisPerKg = max ? parseFloat(max) : null;
+                        break;
+                    case 'kontinuerlig':
+                        data.dosisMikrogramPerKgPerMin = parseFloat(document.getElementById('ki-dosis').value);
+                        data.vaegt = parseFloat(document.getElementById('ki-vaegt').value);
+                        data.maengdeMg = parseFloat(document.getElementById('ki-mg').value);
+                        data.volumenMl = parseFloat(document.getElementById('ki-ml').value);
+                        break;
+                    case 'enhedskonvertering':
+                        data.vaerdi = parseFloat(document.getElementById('ek-vaerdi').value);
+                        data.fraEnhed = document.getElementById('ek-fra').value;
+                        data.tilEnhed = document.getElementById('ek-til').value;
+                        const mol = document.getElementById('ek-molarmasse').value;
+                        data.molarmasse = mol ? parseFloat(mol) : null;
+                        break;
+                    case 'elektrolyt':
+                        data.mmolOensket = parseFloat(document.getElementById('el-mmol').value);
+                        data.mmolPerMl = parseFloat(document.getElementById('el-konc').value);
+                        break;
+                    case 'bsa':
+                        data.vaegt = parseFloat(document.getElementById('bsa-vaegt').value);
+                        data.hoejde = parseFloat(document.getElementById('bsa-hoejde').value);
+                        break;
+                }
+
+                const response = await fetch('/medicine/calculate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    visResultat(result);
+                } else {
+                    alert('Fejl: ' + (result.error || 'Ukendt fejl'));
+                }
+            } catch (error) {
+                alert('Netværksfejl: ' + error.message);
+            }
+        }
+
+        function visResultat(result) {
+            let output = '╔═══════════════════════════════════════════════════════════╗\n';
+            output += `║ BEREGNINGSTYPE: ${result.beregningstype}\n`;
+            output += '╠═══════════════════════════════════════════════════════════╣\n';
+            output += '║ GIVNE VÆRDIER:\n';
+
+            for (const [key, value] of Object.entries(result.givneVaerdier)) {
+                output += `║   ${key}: ${value}\n`;
+            }
+
+            output += '╠═══════════════════════════════════════════════════════════╣\n';
+            output += `║ FORMEL: ${result.formel}\n`;
+            output += '╠═══════════════════════════════════════════════════════════╣\n';
+            output += '║ BEREGNING:\n';
+
+            const beregningLines = result.beregning.split('\n');
+            beregningLines.forEach(line => {
+                output += `║   ${line}\n`;
+            });
+
+            output += '╠═══════════════════════════════════════════════════════════╣\n';
+            output += `║ ✅ RESULTAT: ${result.resultat}\n`;
+            output += '╠═══════════════════════════════════════════════════════════╣\n';
+            output += `║ KONTROL: ${result.kontrol}\n`;
+            output += '╚═══════════════════════════════════════════════════════════╝';
+
+            document.getElementById('resultat').textContent = output;
+            document.getElementById('resultat').classList.add('show');
+            document.getElementById('ingen-resultat').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
