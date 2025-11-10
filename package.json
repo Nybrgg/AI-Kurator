@@ -1,0 +1,23 @@
+{
+  "name": "ai-kurator",
+  "version": "1.0.0",
+  "description": "AI-Kurator - Multi-Purpose Platform with Window Cleaning Booking System and Medicine Calculator for Nursing Students",
+  "main": "api/index.js",
+  "scripts": {
+    "dev": "node backend/server.js",
+    "start": "node backend/server.js",
+    "test": "node backend/test-calculator.js"
+  },
+  "keywords": [
+    "medicine",
+    "calculator",
+    "nursing",
+    "booking",
+    "saas"
+  ],
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=14.x"
+  }
+}

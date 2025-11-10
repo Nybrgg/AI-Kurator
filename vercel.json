@@ -1,0 +1,42 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "api/**/*.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "frontend/**",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/medicine/calculate",
+      "methods": ["POST"],
+      "dest": "/api/medicine/calculate.js"
+    },
+    {
+      "src": "/medicine/?",
+      "dest": "/frontend/index.html"
+    },
+    {
+      "src": "/medicine/(.*)",
+      "dest": "/frontend/$1"
+    },
+    {
+      "src": "/bookings",
+      "methods": ["GET", "POST"],
+      "dest": "/api/bookings.js"
+    },
+    {
+      "src": "/slots",
+      "methods": ["GET"],
+      "dest": "/api/slots.js"
+    },
+    {
+      "src": "/",
+      "dest": "/api/index.js"
+    }
+  ]
+}
